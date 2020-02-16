@@ -1,0 +1,16 @@
+{
+  "name": "myapplication",
+  "version": "1.0.0",
+  "description": "BLE scanner",
+  "main": "index.js",
+  "dependencies": {
+    "node": "^13.8.0",
+    "jetifier": "^1.6.5"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alexandra Esplugas Sabina",
+  "license": "ISC"
+}
