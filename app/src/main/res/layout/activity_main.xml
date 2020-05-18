@@ -5,35 +5,57 @@ android:layout_width="match_parent"
 android:layout_height="match_parent"
 tools:context=".MainActivity">
 
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_alignParentTop="true"
-    android:layout_centerHorizontal="true"
-    android:orientation="horizontal">
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <Button
-        android:id="@+id/startReadingBeaconsButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:layout_weight="1"
-        android:background="@android:color/holo_green_light"
-        android:enabled="true"
-        android:text="@string/start_button_text"
-        android:textColor="@android:color/white" />
+        <EditText
+            android:id="@+id/etTemperatura"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:hint="Temperatura"
+            android:inputType="number" />
 
-    <Button
-        android:id="@+id/stopReadingBeaconsButton"
-        android:layout_width="wrap_content"
+        <EditText
+            android:id="@+id/etHumedad"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Humedad"
+            android:inputType="number" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:layout_weight="1"
-        android:alpha="0.5"
-        android:background="@android:color/holo_red_light"
-        android:enabled="false"
-        android:text="@string/stop_button_text"
-        android:textColor="@android:color/white" />
-</LinearLayout>
+        android:layout_marginTop="169dp"
+        android:orientation="horizontal">
+
+
+        <Button
+            android:id="@+id/startReadingBeaconsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:background="@android:color/holo_green_light"
+            android:enabled="true"
+            android:text="@string/start_button_text"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/stopReadingBeaconsButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:alpha="0.5"
+            android:background="@android:color/holo_red_light"
+            android:enabled="false"
+            android:text="@string/stop_button_text"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
 
 </RelativeLayout>

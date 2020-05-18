@@ -1,6 +1,10 @@
 package com.example.myapplication;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.app.AlertDialog;
 import android.os.Bundle;
 
 import android.Manifest;
@@ -11,18 +15,26 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.RemoteException;
 import android.provider.Settings;
-
-import android.support.annotation.RequiresApi;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
+
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.database.FirebaseDatabase;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.altbeacon.beacon.Beacon;
 import org.altbeacon.beacon.BeaconConsumer;
@@ -31,11 +43,13 @@ import org.altbeacon.beacon.BeaconParser;
 import org.altbeacon.beacon.Identifier;
 import org.altbeacon.beacon.RangeNotifier;
 import org.altbeacon.beacon.Region;
+import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class MainActivity extends AppCompatActivity {
+//Se encarga de la detección de los beacons y muestra un mensaje en cuanto se leen
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, BeaconConsumer, RangeNotifier {
 
     protected final String TAG = MainActivity.this.getClass().getSimpleName();;
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
@@ -44,30 +58,95 @@ public class MainActivity extends AppCompatActivity {
     private static final String ALL_BEACONS_REGION = "AllBeaconsRegion";
 
     // Para interactuar con los beacons desde una actividad
-    private BeaconManager mBeaconManager;
+    private BeaconManager mBeaconManager = null;
 
     // Representa el criterio de campos con los que buscar beacons
     private Region mRegion;
 
+    // Firebase
+    DatabaseReference mRootReference;
+    DatabaseReference mTemperatureRef;
+    DatabaseReference mHumidityRef;
+    EditText TextTemperatura, TextHumedad;
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        TextTemperatura = (EditText)findViewById(R.id.etTemperatura);
+        TextHumedad = (EditText)findViewById(R.id.etHumedad);
+
+        mRootReference = FirebaseDatabase.getInstance().getReference();
+        mTemperatureRef = mRootReference.child("myTemperature");
+        mHumidityRef = mRootReference.child("myHumidity");
+
+        //Temperatura actual de Firebase
+        mTemperatureRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String temperatura = dataSnapshot.getValue(String.class);
+                //int intTemp = Integer.parseInt(temperatura);
+                System.out.println("Recibiendo temperatura de Firebase: "+ temperatura);
+                TextTemperatura.setText(String.valueOf(temperatura));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+
+        //Humedad actual de Firebase
+        mHumidityRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                String humedad = dataSnapshot.getValue(String.class);
+                //int intHumedad = Integer.parseInt(humedad);
+                System.out.println("Recibiendo humedad de Firebase: "+ humedad);
+                TextHumedad.setText(String.valueOf(humedad));
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            }
+        });
+
+        // Botones de la App
         getStartButton().setOnClickListener(this);
         getStopButton().setOnClickListener(this);
 
+        // Inicializamos en BeaconManager
         mBeaconManager = BeaconManager.getInstanceForApplication(this);
 
         // Fijar un protocolo beacon, Eddystone en este caso
+        // Un beacon configurado con este protocolo puede emitir uno de los siguientes tipos de paquetes:
+
+        // * Eddystone-UID: contiene un identificador de un beacon.
+        // * Eddystone-URL: contiene una URL.
+        // * Eddystone-TLM: es emitido con los paquetes anteriores y contiene el estado de salud de un beacon, como el nivel de batería por ejemplo.
+        // * Eddystone-EID: contiene un identificador encriptado que cambia periódicamente.
+
         mBeaconManager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
 
+        requestPermissions(new String[]{Manifest.permission.ACCESS_COARSE_LOCATION}, 1234);
+
+        // Almacena todos los id de los beacons cerca nuestro
         ArrayList<Identifier> identifiers = new ArrayList<>();
 
+//        for (int i = 0; i < identifiers.size(); i++) {
+//            templist.add(identifiers.get(i));
+//        }
+//        beacons.removeAll(beacons);
+//
+        //Buscar todos los beacons posibles
         mRegion = new Region(ALL_BEACONS_REGION, identifiers);
+
     }
 
+    //Scan Beacons----------------------------------------------------------------------------------
+    @Override
     public void onClick(View view) {
 
         if (view.equals(findViewById(R.id.startReadingBeaconsButton))) {
@@ -201,7 +280,32 @@ public class MainActivity extends AppCompatActivity {
         }
 
         for (Beacon beacon : beacons) {
-            showToastMessage(getString(R.string.beacon_detected, beacon.getId3()));
+//            long data[];
+//            data = new long[2];
+
+            System.out.println();
+            System.out.println("Beacon Id: " + beacon.getId1());
+            System.out.println("Beacon Mac adress: " + beacon.getBluetoothAddress());
+            System.out.println("Beacon Card name: " + beacon.getBluetoothName());
+            System.out.println("Beacon ParserIdentifier: " + beacon.getParserIdentifier());
+            System.out.println("Beacon BeaconTypeCode: " + beacon.getBeaconTypeCode());
+            System.out.println("Beacon DataFields: " + beacon.getDataFields());
+            System.out.println("Beacon Distance: " + beacon.getDistance() + " meters");
+            System.out.println("Beacon mIdentifiers: " + beacon.getIdentifiers());
+            System.out.println("Temperatura: " + beacon.getIdentifier(0));
+            System.out.println("Humedad: " + beacon.getIdentifier(1));
+
+            //Identifier temperatura = Identifier.parse(beacon.getIdentifier(0).toString());
+            //Identifier humedad = Identifier.parse(beacon.getIdentifier(1).toString());
+
+            Identifier temperatura = beacon.getIdentifier(0);
+            Identifier humedad = beacon.getIdentifier(1);
+
+            mTemperatureRef.setValue(temperatura.toString());
+            mHumidityRef.setValue(humedad.toString());
+
+
+            //showToastMessage(getString(R.string.beacon_detected, beacon.getId3()));
         }
     }
 
@@ -231,6 +335,7 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Comprobar permisión de localización para Android >= M
      */
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     private void askForLocationPermissions() {
 
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -247,6 +352,7 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     public void onRequestPermissionsResult(int requestCode,
                                            String permissions[], int[] grantResults) {
