@@ -80,31 +80,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mTemperatureRef = mRootReference.child("temperatura");
         mHumidityRef = mRootReference.child("humedad");
 
-        //Actualizando la temperatura de Firebase
-        mTemperatureRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String temperatura = dataSnapshot.getValue(String.class);
-                System.out.println("Recibiendo temperatura de Firebase: "+ temperatura);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-            }
-        });
-
-        //Actualizando la humedad de Firebase
-        mHumidityRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                String humedad = dataSnapshot.getValue(String.class);
-                System.out.println("Recibiendo humedad de Firebase: "+ humedad);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-            }
-        });
+        //Recibiendo la temperatura de Firebase
+//        mTemperatureRef.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                String temperatura = dataSnapshot.getValue(String.class);
+//                System.out.println("Recibiendo temperatura de Firebase: "+ temperatura);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//            }
+//        });
+//
+//        //Recibiendo  la humedad de Firebase
+//        mHumidityRef.addValueEventListener(new ValueEventListener() {
+//            @Override
+//            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+//                String humedad = dataSnapshot.getValue(String.class);
+//                System.out.println("Recibiendo humedad de Firebase: "+ humedad);
+//            }
+//
+//            @Override
+//            public void onCancelled(@NonNull DatabaseError databaseError) {
+//            }
+//        });
 
         // Botones de la App
         getStartButton().setOnClickListener(this);
@@ -271,30 +271,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             showToastMessage(getString(R.string.no_beacons_detected));
         }
 
-        for (Beacon beacon : beacons) {
-//            long data[];
-//            data = new long[2];
-
-            System.out.println();
-            System.out.println("Beacon Id: " + beacon.getId1());
-            System.out.println("Beacon Mac adress: " + beacon.getBluetoothAddress());
+        for (Beacon beacon: beacons) {
             System.out.println("Beacon Card name: " + beacon.getBluetoothName());
-            System.out.println("Beacon ParserIdentifier: " + beacon.getParserIdentifier());
-            System.out.println("Beacon BeaconTypeCode: " + beacon.getBeaconTypeCode());
-            System.out.println("Beacon DataFields: " + beacon.getDataFields());
             System.out.println("Beacon Distance: " + beacon.getDistance() + " meters");
             System.out.println("Beacon mIdentifiers: " + beacon.getIdentifiers());
             System.out.println("Temperatura: " + beacon.getIdentifier(0));
             System.out.println("Humedad: " + beacon.getIdentifier(1));
 
-            //Identifier temperatura = Identifier.parse(beacon.getIdentifier(0).toString());
-            //Identifier humedad = Identifier.parse(beacon.getIdentifier(1).toString());
+            // Recibiendo los datos en Hexadecimal
+            Identifier temperaturaHex = beacon.getIdentifier(0);
+            Identifier humedadHex = beacon.getIdentifier(1);
+            // Parseando los datos a Decimal
+            Identifier temperaturaDec = Identifier.parse(temperaturaHex.toString(), 2);
+            Identifier humedadDec = Identifier.parse(humedadHex.toString(), 2);
 
-            Identifier temperatura = beacon.getIdentifier(0);
-            Identifier humedad = beacon.getIdentifier(1);
-
-            mTemperatureRef.setValue(temperatura.toString());
-            mHumidityRef.setValue(humedad.toString());
+            //Actualizando los datos en Firebase
+            mTemperatureRef.setValue(temperaturaDec.toString());
+            mHumidityRef.setValue(humedadDec.toString());
 
             showToastMessage(getString(R.string.beacon_detected));
         }
