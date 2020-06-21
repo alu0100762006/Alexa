@@ -21,7 +21,9 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.firebase.FirebaseApp;
@@ -67,7 +69,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     DatabaseReference mRootReference;
     DatabaseReference mTemperatureRef;
     DatabaseReference mHumidityRef;
-    EditText TextTemperatura, TextHumedad;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -75,21 +76,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        TextTemperatura = (EditText)findViewById(R.id.etTemperatura);
-        TextHumedad = (EditText)findViewById(R.id.etHumedad);
-
         mRootReference = FirebaseDatabase.getInstance().getReference();
-        mTemperatureRef = mRootReference.child("myTemperature");
-        mHumidityRef = mRootReference.child("myHumidity");
+        mTemperatureRef = mRootReference.child("temperatura");
+        mHumidityRef = mRootReference.child("humedad");
 
-        //Temperatura actual de Firebase
+        //Actualizando la temperatura de Firebase
         mTemperatureRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String temperatura = dataSnapshot.getValue(String.class);
-                //int intTemp = Integer.parseInt(temperatura);
                 System.out.println("Recibiendo temperatura de Firebase: "+ temperatura);
-                TextTemperatura.setText(String.valueOf(temperatura));
             }
 
             @Override
@@ -97,14 +93,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        //Humedad actual de Firebase
+        //Actualizando la humedad de Firebase
         mHumidityRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 String humedad = dataSnapshot.getValue(String.class);
-                //int intHumedad = Integer.parseInt(humedad);
                 System.out.println("Recibiendo humedad de Firebase: "+ humedad);
-                TextHumedad.setText(String.valueOf(humedad));
             }
 
             @Override
@@ -118,14 +112,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         // Inicializamos en BeaconManager
         mBeaconManager = BeaconManager.getInstanceForApplication(this);
-
-        // Fijar un protocolo beacon, Eddystone en este caso
-        // Un beacon configurado con este protocolo puede emitir uno de los siguientes tipos de paquetes:
-
-        // * Eddystone-UID: contiene un identificador de un beacon.
-        // * Eddystone-URL: contiene una URL.
-        // * Eddystone-TLM: es emitido con los paquetes anteriores y contiene el estado de salud de un beacon, como el nivel de batería por ejemplo.
-        // * Eddystone-EID: contiene un identificador encriptado que cambia periódicamente.
 
         mBeaconManager.getBeaconParsers().add(new BeaconParser().
                 setBeaconLayout(BeaconParser.EDDYSTONE_UID_LAYOUT));
@@ -149,8 +135,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View view) {
 
-        if (view.equals(findViewById(R.id.startReadingBeaconsButton))) {
+        final Button startButton = findViewById(R.id.startReadingBeaconsButton);
+        final Button stopButton = findViewById(R.id.stopReadingBeaconsButton);
 
+        // Empezando la búsqueda de beacons
+        if (view.equals(startButton)) {
+            startButton.setEnabled(true);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 
                 // Si los permisos de localización todavía no se han concedido, solicitarlos
@@ -168,9 +158,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 prepareDetection();
             }
+        // Parando la búsqueda de beacons
+        } else if (view.equals(stopButton)) {
 
-        } else if (view.equals(findViewById(R.id.stopReadingBeaconsButton))) {
-
+            stopButton.setEnabled(true);
+            startButton.setEnabled(false);
             stopDetectingBeacons();
 
             BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -304,8 +296,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             mTemperatureRef.setValue(temperatura.toString());
             mHumidityRef.setValue(humedad.toString());
 
-
-            //showToastMessage(getString(R.string.beacon_detected, beacon.getId3()));
+            showToastMessage(getString(R.string.beacon_detected));
         }
     }
 
