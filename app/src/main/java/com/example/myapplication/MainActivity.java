@@ -270,26 +270,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (beacons.size() == 0) {
             showToastMessage(getString(R.string.no_beacons_detected));
         }
-
+        int i=0;
         for (Beacon beacon: beacons) {
             System.out.println("Beacon Card name: " + beacon.getBluetoothName());
             System.out.println("Beacon Distance: " + beacon.getDistance() + " meters");
-            System.out.println("Beacon mIdentifiers: " + beacon.getIdentifiers());
-            System.out.println("Temperatura: " + beacon.getIdentifier(0));
-            System.out.println("Humedad: " + beacon.getIdentifier(1));
 
-            // Recibiendo los datos en Hexadecimal
-            Identifier temperaturaHex = beacon.getIdentifier(0);
-            Identifier humedadHex = beacon.getIdentifier(1);
-            // Parseando los datos a Decimal
-            Identifier temperaturaDec = Identifier.parse(temperaturaHex.toString(), 2);
-            Identifier humedadDec = Identifier.parse(humedadHex.toString(), 2);
+                // Recibiendo los datos en Hexadecimal
+                if( i == 0) {
+                    Identifier temperaturaHex = beacon.getIdentifier(1);
+                    System.out.println("Temperatura: " + temperaturaHex);
+                    // Parseando los datos a Decimal
+                    Identifier temperaturaDec = Identifier.parse(temperaturaHex.toString(), 2);
+                    //Actualizando los datos en Firebase
+                    mTemperatureRef.setValue(temperaturaDec.toString());
+                }
+                if( i == 1) {
+                    Identifier humedadHex = beacon.getIdentifier(1);
+                    System.out.println("Humedad: " + humedadHex);
+                    // Parseando los datos a Decimal
+                    Identifier humedadDec = Identifier.parse(humedadHex.toString(), 2);
+                    //Actualizando los datos en Firebase
+                    mHumidityRef.setValue(humedadDec.toString());
+                }
 
-            //Actualizando los datos en Firebase
-            mTemperatureRef.setValue(temperaturaDec.toString());
-            mHumidityRef.setValue(humedadDec.toString());
+                showToastMessage(getString(R.string.beacon_detected));
 
-            showToastMessage(getString(R.string.beacon_detected));
+                i++;
         }
     }
 
